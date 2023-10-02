@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding-top: 15%;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #file-upload {
+            display: none;
+        }
+
+        label[for="file-upload"] {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        label[for="file-upload"]:hover {
+            background-color: #0056b3;
+        }
+
+        #file-name {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #error-message {
+            color: red;
+            margin-top: 10px;
+        }
+
+        #generate-button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: none;
+        }
+
+        #generate-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Excel Generator</h1>
+        <input type="file" id="file-upload" accept=".json">
+        <label for="file-upload">Upload The JSON File</label>
+        <div id="file-name"></div>
+        <div id="error-message"></div>
+        <button id="generate-button">Generate Excel</button>
+    </div>
+
+    <script>
+        document.getElementById("file-upload").addEventListener("change", function() {
+            const fileInput = document.getElementById("file-upload");
+            const fileNameDisplay = document.getElementById("file-name");
+            const errorMessage = document.getElementById("error-message");
+            const generateButton = document.getElementById("generate-button");
+            const selectedFile = fileInput.files[0];
+
+            if (!selectedFile) {
+                alert("Please select a JSON file.");
+                return;
+            }
+            else{
+                fileNameDisplay.textContent = "Selected File: " + selectedFile.name;
+
+                // Check file extension
+                const fileName = selectedFile.name.toLowerCase();
+                if (fileName.endsWith(".json")) {
+                    errorMessage.textContent = "";
+                    generateButton.style.display = "block"; // Show the Generate JSON button
+                } else {
+                    errorMessage.textContent = "Error: File must have .json extension.";
+                    fileInput.value = ""; // Clear the file input
+                    generateButton.style.display = "none"; // Hide the Generate JSON button
+                }
+            }             
+
+            // Create a FormData object to send the file
+            const formData = new FormData();
+            formData.append("json_file", selectedFile);
+
+            // Send a POST request to the Flask endpoint to generate the Excel file
+            fetch('/generate_excel', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    alert("Excel generated successfully! File path: " + data.file_path);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while generating Excel.");
+            });
+        });
+    </script>
+</body>
+</html>
